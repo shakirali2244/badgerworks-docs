@@ -4,7 +4,7 @@
 
 <p>This can be done by using by changing to your node app's root dir and</p>
 
-<p></p><div class="black">$ tar --exclude='.git*' --exclude="node_modules" -cvf &nbsp;placeholder_1.0.tar.gz ./</div>
+<p></p><div class="cli">$ tar --exclude='.git*' --exclude="node_modules" -cvf &nbsp;placeholder_1.0.tar.gz ./</div>
 
 <p>This will create a tarball with everything in current directory excluding node_modules and .git dir if it exists with&nbsp;</p><hr />
 <p>After this you can decide where the debian files will be. Start by creating first directory where the binaries will be generated out. say builder/ . next cd into builder/ and make sub-directory placeholder-1.0/ based on he tar created previously&nbsp;</p>
@@ -24,9 +24,9 @@
 <p>1.0 is the version of src code and -1 is version of debian files used to gen the binary&nbsp;</p>
 
 <p>You will end with a file as follows</p>
-<div class="black">placeholder (1.0-1) UNRELEASED; urgency=low<br>
+<div class="black">placeholder (1.0-1) UNRELEASED; urgency=low<br />
 
-* —package placeholder <br />
+* â€”package placeholder <br />
 
 --  &lt;pi@raspberrypi&gt;   Tue, 10 Feb 2015 06:56:05 +0000</div>
 
@@ -93,7 +93,8 @@ path-to-app is determined in debian/install below<br /><a href="http://badgerw0r
 <p>Now you would want to unpack your tarball and setup final tasks like calling funnyscript to run the app create a symlink in unix run-levels so that app will run on startup</p><p>This is done by following&nbsp;</p>
 
 <p><b>debian/postinst</b></p><p>Which in out case looks like this&nbsp;</p>
-<div class="black">#!/bin/bashtar -xvf /path/to/app/placeholder_1.0.tar.gz -C &nbsp;/path/to/app/cd /path/to/app/;npm install (if node_packages were not included in the tarball)<br />
+<div class="black">#!/bin/bash
+<br />tar -xvf /path/to/app/placeholder_1.0.tar.gz -C &nbsp;/path/to/app/cd /path/to/app/;npm install (if node_packages were not included in the tarball)<br />
 
 ln -s /etc/init.d/funnyscript /etc/rc2.d/S99funnyscript<br />service funnyscript start</div>
 Once this is done you may proceed with a debuild command which should return no errors&nbsp;
