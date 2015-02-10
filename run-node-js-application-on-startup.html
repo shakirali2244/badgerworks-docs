@@ -1,0 +1,18 @@
+<p>I have been using <a href="http://blog.nodejitsu.com/keep-a-nodejs-server-up-with-forever">forever</a> node package to start a node application as a background process which can be added to crontab of pi user. However I had no luck even after some efforts and changing permissions on src files.</p><p>So I took out forever which executes node and run the app and did it directly.</p><p>Start by finding the path of node. Which can be checked by Shown as follows.</p><p></p><div class="cli">$ env | grep PATH</div>
+<p>Which will return somehing similar to</p>
+<p></p><div class="black">PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games</div>
+<p>Node will be in one of the returned directories usually <b>/usr/local/bin</b>. it can be checked by doing</p>
+<p></p><div class="cli">$ /usr/local/bin/node -version &nbsp;</div>You&nbsp;should see&nbsp;
+<p></p><div class="black">&nbsp;v0.10.35</div>
+<p>Now we just to find the path of application src which can be done by cd-ing into the directory of your project and&nbsp;</p>
+<p></p><div class="cli">$ pwd&nbsp;</div>You&nbsp;should see&nbsp;
+<p></p><div class="black">&nbsp;/home/pi/app/</div>
+<p>After you have all absolute paths you just have to add a line crontab by doing&nbsp;</p>
+<div class="cli">$&nbsp;crontab -u pi -e</div>
+<p><i>NOTE :- this will add cronjob to user pi, if you have different user please change pi accordingly&nbsp;</i><b><br /></b></p>
+<p>This cmd should open the crontab file for user pi using nano text editor generally.<i> &nbsp;</i></p>
+<p>Add the following line based on path for node and your application's .js file</p>
+<p></p><div class="black">@reboot /usr/local/bin/node /home/pi/app/app.js &amp;</div>
+<p>write out(<b>CTRL+o&amp;ret)</b> and exit<b> (CTRL-x) </b>andyou should see a message confirming the crontab update like&nbsp;</p>
+<p></p><div class="black">crontab: installing new crontab</div>
+<p>Now you should reboot and the application would be running after it boots up.</p><p>Similar procedure can be repeated to run programs written for python, java etc.&nbsp;</p>

@@ -1,0 +1,101 @@
+<p>NOTE:- This can be repeated for src code written for many other compilers where an output object is not easily retrievable.</p>
+
+<p>First things first. You will need to make an tarball of you code. Tarball should have all the the files expect the node_modules directory. If you want to add node modules into the binary that will increase the size of the binary and will be inefficient in a way since npm can be used by the client to download . But if you want the binary to be independent of internet connection node_modules may be added&nbsp;</p>
+
+<p>This can be done by using by changing to your node app's root dir and</p>
+
+<p></p><div class="black">$ tar --exclude='.git*' --exclude="node_modules" -cvf &nbsp;placeholder_1.0.tar.gz ./</div>
+
+<p>This will create a tarball with everything in current directory excluding node_modules and .git dir if it exists with&nbsp;</p><hr />
+<p>After this you can decide where the debian files will be. Start by creating first directory where the binaries will be generated out. say builder/ . next cd into builder/ and make sub-directory placeholder-1.0/ based on he tar created previously&nbsp;</p>
+
+<p>Before we start talking about debain packaging we will need few packages installed by&nbsp;</p>
+
+<p></p><div class="cli">$ apt-get install build-essential devscripts debhelper</div>
+
+<p>Now place the tarball into&nbsp;placeholder-1.0/ . Now you may create another sub-directory inside placeholder-1.0/ named debian/ . debian/ dir is where all the debian files will be placed by use for generating the binary.&nbsp;</p>
+
+<p>Files you will need to create are as follows&nbsp;</p>
+
+<p><b>debian/changelog&nbsp;</b></p>
+
+<p>This can be done by &nbsp;</p><p></p><div class="cli">$ dch --create -v 1.0-1 --package placeholder&nbsp;</div>
+
+<p>1.0 is the version of src code and -1 is version of debian files used to gen the binary&nbsp;</p>
+
+<p>You will end with a file as follows</p>
+<div class="black">placeholder (1.0-1) UNRELEASED; urgency=low<br>
+
+* —package placeholder <br />
+
+--  &lt;pi@raspberrypi&gt;   Tue, 10 Feb 2015 06:56:05 +0000</div>
+
+<p>You will need to edit the debian/changelog accordingly</p><p>next file needed is&nbsp;</p>
+
+<p><b>debian/compat</b><br /></p><p>which should contain&nbsp;</p><div class="black">9</div>
+
+<p>according to the debian documentation&nbsp;</p><p>The next debian file is&nbsp;</p>
+
+<p><b>debian/control</b></p>
+<div class="black">
+Source: placeholder
+
+Maintainer: first last &lt;email_address&gt; <br />
+
+Section: misc <br /> Priority: optional
+
+Standards-Version: 1.0 <br />
+
+Build-Depends: debhelper (&gt;= 9)<br /><br />
+
+<p>Package: placeholder<br />Architecture: any<br />Depends: cowsay, nodejs<br />Description: simple&nbsp;description&nbsp;of the package in &lt; 60 chars </p></div>
+
+<p>The important line is control file is Depends . You need to put the dependencies which in our case will only be node. apt-get and dpkg check for those packages before installing your package and create a dependency tree.&nbsp;</p><p>The next file is&nbsp;</p>
+
+<p><b>debian/copyright&nbsp;</b></p><p>You may put the agreement in this file or just create an empty file . Dosen't really matter from non-legal POV.&nbsp;</p><p>The next file is&nbsp;</p>
+
+<p><b>debian/source/format</b><br /></p>
+
+<p>Which may contain the src code version hence </p><p>1.0 in our case</p>
+
+<p>&nbsp;The next file is&nbsp;</p><p><b>debian/rules&nbsp;</b></p>
+
+<p>Since we are not using make to do anything with our src code we can use the default pasted below . <b>NOTE:- after pasting you will have to change spaces to tab or else building package will fail</b></p>
+
+<div class="black">#!/usr/bin/make -f <br />
+
+# See debhelper(7) (uncomment to enable)<br />
+
+# output every command that modifies files on the build system.<p>#DH_VERBOSE = 1<br />
+
+# see EXAMPLES in dpkg-buildflags(1) and read /usr/share/dpkg/*<br />DPKG_EXPORT_BUILDFLAGS = 1<br />include /usr/share/dpkg/default.mk<br /># see FEATURE AREAS in dpkg-buildflags(1)<br />#export DEB_BUILD_MAINT_OPTIONS = hardening=+all<br />
+
+# see ENVIRONMENT in dpkg-buildflags(1)<br /># package maintainers to append CFLAGS<br />#export DEB_CFLAGS_MAINT_APPEND &nbsp;= -Wall -pedantic<br /># package maintainers to append LDFLAGS&gt;<br />#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed<br /># main packaging script based on dh7 syntax<br />%:<br /> &nbsp; &nbsp; &nbsp; &nbsp;dh $@</p></div>
+
+<p>and the last files needed is&nbsp;</p>
+
+<p><b>debian/placeholder.dirs</b><br /></p><p>which should contain &nbsp;</p>
+
+<div class="black">usr/bin<br />
+
+usr/share/man/man1</div>
+
+<p>according to the documentation</p><hr /><p>Now that we are done with default files needed to create the binary we should put our tarball in builder/placeholder-1.0/ directory</p>
+
+<p>If you want you application to run as a service you will have to place a script(say funnyscript) &nbsp;along with this tarball.&nbsp;</p>
+
+<div class="black">#!/bin/bash<p>echo -n "Starting : placeholder"<br />nohup /path/to/node /path/to/app &amp;</p></div>
+path-to-app is determined in debian/install below<br /><a href="http://badgerw0rks.tumblr.com/post/109164731252/run-node-js-application-on-startup">finding-path-to-node</a><p>I will talk about nohup and services in another post <br /></p>
+
+<p>You will have to add a special debian file to install the tarball and script as follows&nbsp;</p><p><b>debian/install</b></p><p>which should look like&nbsp;</p>
+
+<div class="black">funnyscript /etc/init.d/<br />placeholder_1.0.tar.gz /whatever/location/you/like your code/to/be/</div>
+<p>Now you would want to unpack your tarball and setup final tasks like calling funnyscript to run the app create a symlink in unix run-levels so that app will run on startup</p><p>This is done by following&nbsp;</p>
+
+<p><b>debian/postinst</b></p><p>Which in out case looks like this&nbsp;</p>
+<div class="black">#!/bin/bashtar -xvf /path/to/app/placeholder_1.0.tar.gz -C &nbsp;/path/to/app/cd /path/to/app/;npm install (if node_packages were not included in the tarball)<br />
+
+ln -s /etc/init.d/funnyscript /etc/rc2.d/S99funnyscript<br />service funnyscript start</div>
+Once this is done you may proceed with a debuild command which should return no errors&nbsp;
+
+<div class="cli">$ debuild -us -uc&nbsp;</div><p>If this runs correctly you will end up with a debian binary in /builder directory&nbsp;</p><p>I will create a post on hosting your packages for personal use&nbsp;</p>
