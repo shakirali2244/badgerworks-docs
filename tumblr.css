@@ -6,10 +6,16 @@
             div.black{
                 background-color:#000;
                 color:#fff;
+                margin:30px;
+                padding:5px;
+                font-family:Courier New;
             }
             div.cli{
                 background-color:#000;
                 color:#83F52C;
+                margin:30px;
+                padding:5px;
+                font-family:Courier New;
             }
 
             h1 {
