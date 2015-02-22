@@ -1,5 +1,93 @@
-<p>First things first. You will need an arduino compatible MCU. You can buy them at dx.com for very less. Make sure you buy a USB to serial converter if you buy a pro mini. </p>
+<p>First things first. You will need an arduino compatible board. You can buy them at dx.com for very less. Make sure you buy a USB to serial converter if you buy a pro mini. </p>
 
 <p>Heres Mine</p>
+<img src="https://40.media.tumblr.com/4baf553f4c30bab29833577e7298f2d4/tumblr_nk72c6gtmT1s4n1szo1_540.jpg" alt="image" />
 
-Next You'll have to download the Arduino IDE(Interactive Development Environment) from <a href="http://arduino.cc/en/main/software">arduino.cc</a>
+<p>Next you'll have to download the Arduino IDE(Interactive Development Environment) from <a href="http://arduino.cc/en/main/software">arduino.cc</a></p>
+
+<p>Next you'll need to download VirtualWire <a href="https://www.pjrc.com/teensy/td_libs_VirtualWire.html">Library</a> by Mike McCauley and extract it into C:\Users\{user_name}\Documents\Arduino\libraries on win32 or /home/{user_name}/sketchbook/libraries/</p>
+
+<p>If it worked correctly , you must see it in the examples list at 
+File&gt;Examples in Arduino IDE.</p><p>
+
+
+</p><p>Following Snippet of code is for transmitter</p>
+<div class="black">
+#include &lt;VirtualWire.h&gt;<br />
+void setup() {<br />
+pinMode(13,OUTPUT);<br />
+vw_set_ptt_inverted(true);<br /> 
+vw_set_tx_pin(12);<br />
+vw_setup(4000);// speed of data transfer Kbps<br />
+Serial.begin(9600);<br />
+}<br />
+<br />
+String content = "";<br />
+char character;<br />
+<br />
+void loop(){<br />
+if(Serial.available()){<br />
+  String content = "\0";<br />
+  while(Serial.available()) {<br />
+      character = Serial.read();<br />
+      content.concat(character);<br />
+  }<br />
+  Serial.println(content);<br />  
+  int length = content.length()+1;<br />
+  char controller[length]; <br />
+  memset(controller, 1, sizeof(controller));<br />
+  content.toCharArray(controller,length);<br />
+  vw_send((uint8_t *)controller, strlen(controller));<br />
+  vw_wait_tx(); // Wait until the whole message is gone<br />
+  digitalWrite(13,1);<br />
+  delay(1000);<br />
+  digitalWrite(13,0);<br />
+  }  <br />
+}<br />
+</div>
+
+<p> You should paste the code above in the arduino ide and save it and compily by pressing tick button on upper left of the window. It should give no error messages. Next You will need to plug in your MCU and select the model from tools&gt;board . If the drivers were ok You should be able to select a Serial port from tools&gt;Serial Port. </p>
+
+<p> Now the code is ready to be uploaded which can be done by hitting upload button on upper right corner of the window next to compile button</p>
+
+<p> Once that is done , you can connect the ATAD pin on transmitter to pin marked as 12 on the arduino board since thats what code is instructed to do. You may power the transmitter from 5V from arduino , just make sure it does not draw too much current to burn the MCU . You can open the serial monitor from by Pressing Ctrl+shift+M which will give you access to send strings to the board which will send them over rf to thr receiver. </p>
+
+<p>Following is the code for reciever. Paste it in a new file and following exactly same steps as transmitter, and upload to a different MCU at a different port or a different machine </p>
+
+<div class="black">
+#include &lt;VirtualWire.h&gt;<br />
+void setup()<br />
+{    <br />
+    Serial.begin(9600);<br />
+    Serial.print("started");<br />
+    vw_set_ptt_inverted(true); // Required for DR3100<br />
+    vw_set_rx_pin(12);<br />
+    vw_setup(4000);  // Bits per sec<br />
+    pinMode(13, OUTPUT);<br />
+    vw_rx_start();       // Start the receiver PLL running<br />
+}<br />
+    void loop()<br />
+{<br />
+    uint8_t buf[VW_MAX_MESSAGE_LEN];<br />
+    uint8_t buflen = VW_MAX_MESSAGE_LEN;<br />
+<br />
+    if (vw_get_message(buf, &amp;buflen)) // Non-blocking<br />
+    {<br />
+      Serial.println((char *)buf);<br />
+    }<br />
+}<br />
+<br /></div>
+
+<p>You should open serical monitor of reciever to see messages . I used minicom to read serial data from the MCU connected to linux (debian) machine</p>
+
+<p>Get it by </p>
+<div class="cli">
+# apt-get install minicom<br />
+# minicom -b 9600 -o -D /dev/ttyACM0</div>
+
+<p>once both serial monitors are open , we can test by sending a string over to the reciever</p> 
+
+<img src="https://38.media.tumblr.com/73e86eeaffa51b1f339f049bec9b5e12/tumblr_nk72a4fnb71s4n1szo1_540.gif" alt="image" />
+
+<div class="red">NOTE :- this lib is old and newer version (RadioHead) can be used by same developer. Really appiciate his work. :) </div>
+
