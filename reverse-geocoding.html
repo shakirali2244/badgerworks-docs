@@ -1,0 +1,159 @@
+<p>I had attempted to write a geocoding function, setup a REST API and serve it on EC2. It is currently hosted at badgerworks.pwnz.org/geocode?latitude=blah&longitude=blah for the province of Prince Edward Island( I have a free t2.miccro running T.T) Following is the CREATE pgsql script for functions which would return closest blocks, roads and cities respectively</p>
+<pre>
+<div class="black">
+CREATE OR REPLACE FUNCTION "SA_houses"(
+     lati double precision,
+    longi double precision,
+    tol double precision)
+  RETURNS TABLE(houses text, distance double precision) AS
+$BODY$
+BEGIN
+RETURN QUERY SELECT "addr:housenumber",ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) FROM planet_osm_point 
+	     WHERE ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) <= tol
+	     ORDER BY ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way);
+END
+
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000;
+ALTER FUNCTION "SA_houses"(double precision, double precision, double precision)
+  OWNER TO gisuser;
+  </div></pre>
+  <p></p>
+  <pre>
+  <div class="black">
+  CREATE OR REPLACE FUNCTION "SA_roads"(
+     lati double precision,
+    longi double precision,
+    tol double precision)
+  RETURNS TABLE(roads text, distance double precision) AS
+$BODY$
+BEGIN
+RETURN QUERY SELECT name,ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) FROM planet_osm_roads 
+	     WHERE ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) <= tol
+	     ORDER BY ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way);
+END
+
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000;
+ALTER FUNCTION "SA_roads"(double precision, double precision, double precision)
+  OWNER TO gisuser;
+  </div></pre>
+   <p></p>
+   <pre>
+  <div class="black">
+  
+  CREATE OR REPLACE FUNCTION "SA_cities"(
+     lati double precision,
+    longi double precision,
+    tol double precision)
+  RETURNS TABLE(cities text, distance double precision) AS
+$BODY$
+BEGIN
+RETURN QUERY SELECT name,ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) FROM planet_osm_point 
+	     WHERE ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) <= tol
+	     AND place != ''
+	     ORDER BY ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way);
+END
+
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000;
+ALTER FUNCTION "SA_cities"(double precision, double precision, double precision)
+  OWNER TO gisuser
+  
+  </div></pre>
+ 
+  <p> The SELECT queries can be done as shown ahead </p>
+  <div class="cli">  gis=# SELECT * FROM "SA_houses"(cast(46.238240 as double precision),cast(-63.131070 as double precision),cast(0.1 as double precision));</div>
+
+  <pre><div class="black">
+  
+   houses |       distance
+--------+----------------------
+ 43     | 0.000705956974610761
+ 42     | 0.000710417405473308
+ 229    | 0.000772461856665119
+ 225    | 0.000773902332341643
+ 223    | 0.000784404232527071
+ 221    | 0.000802774787847345
+ 231    |  0.00081134971498234
+ 73     |   0.0008429179378809
+ 235    | 0.000846355870782475
+ 215    | 0.000871770227756377
+ 243    |  0.00102779450281138
+ 78     |  0.00102969628532369
+ 41     |  0.00106890786319038
+ 228    |  0.00111267722184492
+ 232    |  0.00112095771999273
+ 222    |  0.00112433148582215
+ 318    |  0.00112870673781785
+ 236    |  0.00117275471007766
+ 85     |   0.0011781361423873
+ 13     |  0.00118298392211967
+ 16     |  0.00118510032065276
+ </div></pre>
+ 
+  <p> Similar for neares roads </p>
+  <div class="cli">  gis=# SELECT * FROM "SA_roads"(cast(46.238240 as double precision),cast(-63.131070 as double precision),cast(0.1 as double precision));</div>
+
+  <pre><div class="black">
+  
+                    roads                 |       distance
+---------------------------------------+----------------------
+ University Avenue                     | 0.000982569686514518
+ Euston Street                         |  0.00143902640698582
+ University Avenue                     |  0.00271190996347367
+ Grafton Street                        |  0.00534448942088804
+ Longworth Avenue                      |  0.00638565821588142
+ Grafton Street                        |  0.00905705795277769
+ North River Road                      |  0.00928222754299719
+ St. Peters Road                       |   0.0107934438804335
+ St. Peters Road                       |   0.0125966224524683
+ University Avenue                     |    0.013297734111498
+ University Avenue                     |   0.0139823228302747
+ Charlottetown                         |   0.0144249931551747
+ Stratford                             |   0.0144249931551747
+ Belvedere Avenue Roundabout           |   0.0154290052543942
+ Belvedere Avenue                      |   0.0154462810168023
+ Belvedere Avenue                      |   0.0154578149312903
+ Belvedere Avenue                      |     0.01550463676286
+ Belvedere Avenue                      |   0.0155065464785099
+ Belvedere Avenue                      |   0.0156316514178792
+ Belvedere Avenue                      |   0.0156650693024364
+ Arterial Highway                      |   0.0164673550402035
+ </div></pre>
+ 
+  <p> AND cities </p>
+  <div class="cli">  gis=# SELECT * FROM "SA_houses"(cast(46.238240 as double precision),cast(-63.131070 as double precision),cast(0.1 as double precision));</div>
+
+  <pre><div class="black">
+  
+      cities       |      distance
+-------------------+---------------------
+ Charlottetown     | 0.00493048145519088
+ St. Dunstan's     |  0.0171178934480857
+ Parkdale          |   0.017403732744734
+ Rosebank          |  0.0261792246096036
+ Sherwood          |  0.0316365584463646
+ Lewis Point       |  0.0324128535807947
+ Lewis Point       |  0.0326847477758365
+ Southport         |  0.0381219510856966
+ York Point        |  0.0382022507851292
+ Rocky Point       |  0.0407617963893881
+ Hillsborough Park |  0.0409862861900218
+ Keppoch           |  0.0421736799456706
+ Bunbury           |   0.044735133514165
+ Sherwood          |  0.0455421919728323
+ East Royalty      |  0.0466706791385155
+ Stratford         |  0.0468529757486114
+ West Royalty      |  0.0528306696720764
+ Poplar Island     |  0.0532697982598935
+ Kinlock           |  0.0550080130559195
+ Cross Roads       |  0.0571196519633983
+ Royalty Junction  |  0.0600137512850233
+ </div></pre>
