@@ -1,6 +1,6 @@
-<p>I had attempted to write a geocoding function, setup a REST API and serve it on EC2. It is currently hosted at badgerworks.pwnz.org/geocode?latitude=blah&longitude=blah for the province of Prince Edward Island( I have a free t2.miccro running T.T) Following is the CREATE pgsql script for functions which would return closest blocks, roads and cities respectively</p>
-<pre>
-<div class="black">
+<p>I had attempted to write a geocoding function, setup a REST API and serve it on EC2. It is currently hosted at http://shakirali.me/geocode?latitude=46.238240&longitude=-63.131070 for the province of Prince Edward Island( I have a free t2.miccro running T.T) Following is the CREATE pgsql script for functions which would return closest blocks, roads and cities respectively</p>
+
+<div class="black"><pre>
 CREATE OR REPLACE FUNCTION "SA_houses"(
      lati double precision,
     longi double precision,
@@ -19,10 +19,9 @@ $BODY$
   ROWS 1000;
 ALTER FUNCTION "SA_houses"(double precision, double precision, double precision)
   OWNER TO gisuser;
-  </div></pre>
+  </pre></div>
   <p></p>
-  <pre>
-  <div class="black">
+  <div class="black"><pre>
   CREATE OR REPLACE FUNCTION "SA_roads"(
      lati double precision,
     longi double precision,
@@ -41,10 +40,9 @@ $BODY$
   ROWS 1000;
 ALTER FUNCTION "SA_roads"(double precision, double precision, double precision)
   OWNER TO gisuser;
-  </div></pre>
+ </pre></div>
    <p></p>
-   <pre>
-  <div class="black">
+   <div class="black"><pre>
   
   CREATE OR REPLACE FUNCTION "SA_cities"(
      lati double precision,
@@ -66,12 +64,12 @@ $BODY$
 ALTER FUNCTION "SA_cities"(double precision, double precision, double precision)
   OWNER TO gisuser
   
-  </div></pre>
+ </pre></div>
  
   <p> The SELECT queries can be done as shown ahead </p>
   <div class="cli">  gis=# SELECT * FROM "SA_houses"(cast(46.238240 as double precision),cast(-63.131070 as double precision),cast(0.1 as double precision));</div>
 
-  <pre><div class="black">
+  <div class="black"><pre>
   
    houses |       distance
 --------+----------------------
@@ -96,12 +94,12 @@ ALTER FUNCTION "SA_cities"(double precision, double precision, double precision)
  85     |   0.0011781361423873
  13     |  0.00118298392211967
  16     |  0.00118510032065276
- </div></pre>
+ </pre></div>
  
   <p> Similar for neares roads </p>
   <div class="cli">  gis=# SELECT * FROM "SA_roads"(cast(46.238240 as double precision),cast(-63.131070 as double precision),cast(0.1 as double precision));</div>
 
-  <pre><div class="black">
+  <div class="black"><pre>
   
                     roads                 |       distance
 ---------------------------------------+----------------------
@@ -126,12 +124,12 @@ ALTER FUNCTION "SA_cities"(double precision, double precision, double precision)
  Belvedere Avenue                      |   0.0156316514178792
  Belvedere Avenue                      |   0.0156650693024364
  Arterial Highway                      |   0.0164673550402035
- </div></pre>
+ </pre></div>
  
   <p> AND cities </p>
-  <div class="cli">  gis=# SELECT * FROM "SA_houses"(cast(46.238240 as double precision),cast(-63.131070 as double precision),cast(0.1 as double precision));</div>
+  <div class="cli">  gis=# SELECT * FROM "SA_cities"(cast(46.238240 as double precision),cast(-63.131070 as double precision),cast(0.1 as double precision));</div>
 
-  <pre><div class="black">
+  <div class="black"><pre>
   
       cities       |      distance
 -------------------+---------------------
@@ -156,4 +154,32 @@ ALTER FUNCTION "SA_cities"(double precision, double precision, double precision)
  Kinlock           |  0.0550080130559195
  Cross Roads       |  0.0571196519633983
  Royalty Junction  |  0.0600137512850233
- </div></pre>
+ </pre></div>
+ 
+ <p> the JSON response from the API looks like this </p>
+ <div class="black"> {"house":"43","road":"University Avenue","city":"Charlottetown"} </div> 
+ <p> Which is quite close to what we get from nominatim off by + ~5 m in north east , a small bug </p>
+<div class="black"><pre>
+ <reversegeocode timestamp="Sat, 16 May 15 06:03:07 +0000" attribution="Data © OpenStreetMap contributors, ODbL 1.0. http://www.openstreetmap.org/copyright" querystring="format=xml&lat=46.238240&lon=-63.131070&zoom=18&addressdetails=1">
+<result place_id="2577502347" osm_type="way" osm_id="199881769" lat="46.2382572294118" lon="-63.1310327705882">
+30, Passmore Street, Sherwood, Charlottetown, Queens County, Prince Edward Island, C1A 4S3, Canada
+</result>
+<addressparts>
+<house_number>30</house_number>
+<road>Passmore Street</road>
+<suburb>Sherwood</suburb>
+<city>Charlottetown</city>
+<county>Queens County</county>
+<state>Prince Edward Island</state>
+<postcode>C1A 4S3</postcode>
+<country>Canada</country>
+<country_code>ca</country_code>
+</addressparts>
+</reversegeocode> </pre></div>
+
+<div class="red"> OSM is an open source map database and tools such as osm2pgsql are very useful in making an API like this </div>
+
+
+ 
+ 
+ 
