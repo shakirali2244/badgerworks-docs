@@ -1,4 +1,4 @@
-<p>I had attempted to write a geocoding function, setup a REST API and serve it on EC2. It is currently hosted at http://shakirali.me/geocode?latitude=46.238240&longitude=-63.131070 for the province of Prince Edward Island( I have a free t2.miccro running T.T) Following is the CREATE pgsql script for functions which would return closest blocks, roads and cities respectively</p>
+<p>I had attempted to write a geocoding function, setup a REST API and serve it on EC2. It is currently hosted at http://shakirali.me/geocode?latitude=46.238240&amp;longitude=-63.131070 for the province of Prince Edward Island( I have a free t2.miccro running T.T) Following is the CREATE pgsql script for functions which would return closest blocks, roads and cities respectively</p>
 
 <div class="black"><pre>
 CREATE OR REPLACE FUNCTION "SA_houses"(
@@ -9,7 +9,7 @@ CREATE OR REPLACE FUNCTION "SA_houses"(
 $BODY$
 BEGIN
 RETURN QUERY SELECT "addr:housenumber",ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) FROM planet_osm_point 
-	     WHERE ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) <= tol
+	     WHERE ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) &lt;= tol
 	     ORDER BY ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way);
 END
 
@@ -20,7 +20,7 @@ $BODY$
 ALTER FUNCTION "SA_houses"(double precision, double precision, double precision)
   OWNER TO gisuser;
   </pre></div>
-  <p></p>
+  <div></div>
   <div class="black"><pre>
   CREATE OR REPLACE FUNCTION "SA_roads"(
      lati double precision,
@@ -30,7 +30,7 @@ ALTER FUNCTION "SA_houses"(double precision, double precision, double precision)
 $BODY$
 BEGIN
 RETURN QUERY SELECT name,ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) FROM planet_osm_roads 
-	     WHERE ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) <= tol
+	     WHERE ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) &lt;= tol
 	     ORDER BY ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way);
 END
 
@@ -41,7 +41,7 @@ $BODY$
 ALTER FUNCTION "SA_roads"(double precision, double precision, double precision)
   OWNER TO gisuser;
  </pre></div>
-   <p></p>
+   <div></div>
    <div class="black"><pre>
   
   CREATE OR REPLACE FUNCTION "SA_cities"(
@@ -52,7 +52,7 @@ ALTER FUNCTION "SA_roads"(double precision, double precision, double precision)
 $BODY$
 BEGIN
 RETURN QUERY SELECT name,ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) FROM planet_osm_point 
-	     WHERE ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) <= tol
+	     WHERE ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way) &lt;= tol
 	     AND place != ''
 	     ORDER BY ST_Distance(ST_SetSRID(ST_MakePoint(longi,lati),4326),way);
 END
@@ -96,7 +96,7 @@ ALTER FUNCTION "SA_cities"(double precision, double precision, double precision)
  16     |  0.00118510032065276
  </pre></div>
  
-  <p> Similar for neares roads </p>
+  <p> Similar for nearest roads </p>
   <div class="cli">  gis=# SELECT * FROM "SA_roads"(cast(46.238240 as double precision),cast(-63.131070 as double precision),cast(0.1 as double precision));</div>
 
   <div class="black"><pre>
@@ -160,24 +160,18 @@ ALTER FUNCTION "SA_cities"(double precision, double precision, double precision)
  <div class="black"> {"house":"43","road":"University Avenue","city":"Charlottetown"} </div> 
  <p> Which is quite close to what we get from nominatim off by + ~5 m in north east , a small bug </p>
 <div class="black"><pre>
- <reversegeocode timestamp="Sat, 16 May 15 06:03:07 +0000" attribution="Data © OpenStreetMap contributors, ODbL 1.0. http://www.openstreetmap.org/copyright" querystring="format=xml&lat=46.238240&lon=-63.131070&zoom=18&addressdetails=1">
-<result place_id="2577502347" osm_type="way" osm_id="199881769" lat="46.2382572294118" lon="-63.1310327705882">
-30, Passmore Street, Sherwood, Charlottetown, Queens County, Prince Edward Island, C1A 4S3, Canada
-</result>
-<addressparts>
-<house_number>30</house_number>
-<road>Passmore Street</road>
-<suburb>Sherwood</suburb>
-<city>Charlottetown</city>
-<county>Queens County</county>
-<state>Prince Edward Island</state>
-<postcode>C1A 4S3</postcode>
-<country>Canada</country>
-<country_code>ca</country_code>
-</addressparts>
-</reversegeocode> </pre></div>
+30
+Passmore Street
+Sherwood
+Charlottetown
+Queens County
+Prince Edward Island
+C1A 4S3
+Canada
+ca
+ </pre></div>
 
-<div class="red"> OSM is an open source map database and tools such as osm2pgsql are very useful in making an API like this </div>
+<div class="red"> OSM is an open source map database and tools such as osm2pgsql are very useful in making an API like this. I Hope this helps someone </div>
 
 
  
