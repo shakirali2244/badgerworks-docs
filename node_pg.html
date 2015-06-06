@@ -1,0 +1,35 @@
+<p> I had setup a server in the past to have a non-MVC like usage with postgresql. The package I am using is called pg. You can set it up by first getting express</p>
+
+<div class="cli"> npm install express pg --save </div>
+
+<p> After that you will need access to a postgres server. Following SQL command will set up the initial env needed for API to then take over.</p>
+
+<p> First setup a USER/ROLE special for API to access the our special db on the server which we'll create in next step. </p>
+
+<div class="cli"> # CREATE USER username WITH ENCRYPTED PASSWORD 'password'; </div> 
+
+<p> Then we'll have to create the database which can be done using following command </p>
+
+<div class="cli"> # CREATE DATABASE "DatabaseNAME" OWNER username; </div>
+
+<div class="red"> NOTE: use quotes if you want different cased letters in the name or else it will be lower case by default </div>
+
+<p> Following is the server.js which has the code to create connection and a table in the database everytime the server is started </p><p>
+
+</p><div class="black"><pre> 
+var pg = require('pg');
+var conString = "postgres://username:password@localhost/DatabaseNAME";
+
+
+pg.connect(conString, function(err, client, done) {
+  if(err) {
+    return console.error('error fetching client from pool', err);
+  }
+  client.query('CREATE TABLE IF NOT EXISTS users(name varchar, email varchar , hash varchar , salt bigint);', function (data){
+  	console.log(data);
+  });
+});
+</pre>
+</div>
+
+<p> Finally start the server and check the database for table or the node log </p>
