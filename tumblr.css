@@ -2,7 +2,13 @@
             body {
                 background: {BackgroundColor};
             }
-            
+            div.red{
+                background-color:#f00;
+                color:#fff;
+                margin:30px;
+                padding:5px;
+                font-family:Courier New;
+            }
             div.black{
                 background-color:#000;
                 color:#fff;
@@ -17,11 +23,21 @@
                 padding:5px;
                 font-family:Courier New;
             }
-
-            h1 {
-                font-family: {TitleFont}, "Helvetica Neue", HelveticaNeue, Arial, sans-serif;
-                font-weight: {TitleFontWeight};
+            img{
+                min-width:90%;
+                 display: block;
+                margin-left: auto;
+                margin-right: auto;
             }
+            
+            section.content {
+                min-width:90%;
+            }
+        
+            p {
+                font-family: "Verdana", Geneva, sans-serif;
+            }
+            
 
             h1 a,
             .description,
