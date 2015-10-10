@@ -1,0 +1,156 @@
+<p><h1> Coding the app </h1>
+
+<h2> Step 1 </h2>
+
+ <p> Start with a new application . Give it a name and a "company" domain and hit next </p>
+
+<img src="https://40.media.tumblr.com/3abc325624c07ba9cb006916d31bd51a/tumblr_nw0ryq5vCe1u9q0q8o1_1280.png" alt="image"><h2> step 2 </h2>
+
+<p> Add sdk compatibalty attributes followed by activity type and resourse names </p>
+
+<img src="https://36.media.tumblr.com/ac15eb24e5c51eeb953907fb9f085e4a/tumblr_nw0ryq5vCe1u9q0q8o2_1280.png" alt="image"><img src="https://41.media.tumblr.com/28a2434058a8734d37f95e70ebd8f08d/tumblr_nw0ryq5vCe1u9q0q8o4_1280.png" alt="image"><h2> step 3 </h2>
+
+<p> Add the following line in the gradle build file at Gradle Scripts &gt; build.gradle(Module app). <br>
+Also located in /app/build.gradle of your project. <br>
+Then sync the gradle files with the project</p>
+
+<div class="black"> Compile 'io.socket:socket.io-client:0.6.1' </div>
+
+<h2> Step 4 </h2>
+
+<p> Paste the src code into java and xml files respectively </p>
+
+<p> MainActivity.java with your pi's ip address </p>
+
+<div class="black"> <pre>
+
+package com.example.supersimplewebsockets;
+
+import android.support.v7.app.ActionBarActivity;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.SeekBar;
+
+
+import java.net.URISyntaxException;
+
+
+
+
+public class MainActivity extends ActionBarActivity {
+
+    private Socket socket = null;
+    private SeekBar seekBar;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        try {
+            socket = IO.socket("http://192.168.0.1337:3001"); //add CORRECT IP ADDRESS
+            Log.d("SOCKET","success");
+        } catch (URISyntaxException e1) {
+            e1.printStackTrace();
+        }
+        socket.connect();
+        socket.emit("ch1",3);
+
+
+        seekBar = (SeekBar) findViewById(R.id.throttle);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Log.d("SEEK","Position :"+progress);
+                socket.emit("ch1",progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+}
+
+</pre></div>
+
+<p> activity_main.xml </p>
+
+<div class="black"> <pre>
+&lt;RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity"&gt;
+
+    &lt;TextView android:text="@string/hello_world" android:layout_width="wrap_content"
+        android:layout_height="wrap_content" /&gt;
+
+    &lt;SeekBar android:id="@+id/throttle"
+       android:layout_width="300dp"
+       android:layout_height="wrap_content"
+       android:layout_alignParentLeft="true"
+       android:layout_alignParentTop="true"
+       android:layout_marginTop="26dp"
+       android:max="100"/&gt;
+
+
+&lt;/RelativeLayout&gt;
+</pre></div>
+
+<p> Add the following lines to ApplicationManifest.xml before the &lt;application&gt; tag</p>
+
+<div class="black"> <pre>
+&lt;uses-permission android:name="android.permission.INTERNET" /&gt;
+    &lt;uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /&gt;
+    
+    </pre> </div>
+<h2> step 5 </h2>
+
+<p> If everything was done correctly, you should be able to import correct librarios for socket connection like this </p>
+
+<img src="https://40.media.tumblr.com/3fbdf56584977db4b0b312abd79bcc8e/tumblr_nw0ryq5vCe1u9q0q8o5_1280.png" alt="image"><h1> Installing the server and simple servo control library </h1>
+
+<p> First connect your servo to vcc gnd respectively and signal to pin 17 on RPi. Add needed deps to pi, additional info at <a href="https://docs.google.com/document/d/1QtZLKMVwIacqLS4Pe1zGYl2ZREuglknlEIhalkZkXko/edit?usp=sharing"> Here </a>. You need Node.js , latest npm, and piblaster for the pi </p> 
+
+<div class="black"> <pre>
+$git clone https://github.com/shakirali2244/servo-socket.git
+$cd servo-socket
+$npm install
+$node .
+</pre></div>
+
+<p>
+Now start the app, you should see a user connected in the Node window , and on moving the seekbar , the servo should move from 0 to 180 </p></p>
